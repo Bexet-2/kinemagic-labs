@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>KineMagic Labs</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=DM+Mono:ital,wght@0,400;0,500;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="css/main.css"/>
+</head>
+<body>
+
+<!-- APP SHELL -->
+<div id="app">
+
+  <!-- TOP BAR -->
+  <header id="topbar">
+    <div class="tb-logo" onclick="navigate('home')">
+      <svg width="30" height="30" viewBox="0 0 30 30" fill="none">
+        <polygon points="15,2 28,9 28,21 15,28 2,21 2,9" stroke="#c8a97a" stroke-width="1.5" fill="rgba(200,169,122,0.1)"/>
+        <polygon points="15,7 22,11 22,19 15,23 8,19 8,11" stroke="#b5420a" stroke-width="1" fill="rgba(181,66,10,0.12)"/>
+        <circle cx="15" cy="15" r="3" fill="#c8a97a"/>
+      </svg>
+      <span class="brand">Kine<em>Magic</em> Labs</span>
+    </div>
+    <nav class="tb-nav">
+      <button class="tnav active" data-page="home" onclick="navigate('home')">Workshop</button>
+      <button class="tnav" data-page="library" onclick="navigate('library')">3D Library</button>
+      <button class="tnav" data-page="cad" onclick="navigate('cad')">CAD Studio</button>
+      <button class="tnav" data-page="blocks" onclick="navigate('blocks')">Block Coder</button>
+      <button class="tnav" data-page="community" onclick="navigate('community')">Community</button>
+    </nav>
+    <div class="tb-right">
+      <div id="auth-bar">
+        <button class="btn-ghost" onclick="showAuth('login')">Sign in</button>
+        <button class="btn-rust" onclick="showAuth('signup')">Join free</button>
+      </div>
+      <div id="user-bar" class="hidden">
+        <span id="user-name" class="user-chip"></span>
+        <button class="btn-ghost" onclick="signOut()">Sign out</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- PAGES -->
+  <main id="page-area">
+    <div id="page-home" class="page active"></div>
+    <div id="page-library" class="page hidden"></div>
+    <div id="page-cad" class="page hidden"></div>
+    <div id="page-blocks" class="page hidden"></div>
+    <div id="page-community" class="page hidden"></div>
+  </main>
+
+</div>
+
+<!-- AUTH MODAL -->
+<div id="auth-modal" class="modal-overlay hidden">
+  <div class="modal-box">
+    <button class="modal-close" onclick="hideAuth()">✕</button>
+    <div class="modal-logo">
+      <svg width="36" height="36" viewBox="0 0 30 30" fill="none">
+        <polygon points="15,2 28,9 28,21 15,28 2,21 2,9" stroke="#c8a97a" stroke-width="1.5" fill="rgba(200,169,122,0.1)"/>
+        <polygon points="15,7 22,11 22,19 15,23 8,19 8,11" stroke="#b5420a" stroke-width="1" fill="rgba(181,66,10,0.12)"/>
+        <circle cx="15" cy="15" r="3" fill="#c8a97a"/>
+      </svg>
+    </div>
+    <h2 id="auth-title">Sign in to KineMagic</h2>
+    <p id="auth-sub">Access your projects, share builds, and collaborate.</p>
+    <div class="auth-form">
+      <input type="email" id="auth-email" placeholder="Email address"/>
+      <input type="password" id="auth-pass" placeholder="Password"/>
+      <div id="auth-name-wrap" class="hidden">
+        <input type="text" id="auth-displayname" placeholder="Display name (e.g. maker_jane)"/>
+      </div>
+      <button class="btn-rust full" id="auth-submit" onclick="doAuth()">Sign in</button>
+      <p class="auth-switch" id="auth-switch-text">
+        No account? <a href="#" onclick="showAuth('signup');return false;">Create one free</a>
+      </p>
+      <div id="auth-error" class="auth-error hidden"></div>
+    </div>
+    <div class="auth-divider"><span>or</span></div>
+    <button class="btn-google" onclick="doGoogleAuth()">
+      <svg width="18" height="18" viewBox="0 0 18 18"><path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.875 2.684-6.615z" fill="#4285F4"/><path d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z" fill="#34A853"/><path d="M3.964 10.707c-.18-.54-.282-1.117-.282-1.707s.102-1.167.282-1.707V4.961H.957C.347 6.175 0 7.55 0 9s.348 2.825.957 4.039l3.007-2.332z" fill="#FBBC05"/><path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.961L3.964 7.293C4.672 5.166 6.656 3.58 9 3.58z" fill="#EA4335"/></svg>
+      Continue with Google
+    </button>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast" class="toast hidden"></div>
+
+<!-- FIREBASE SDK -->
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut as fbSignOut, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, updateProfile } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import { getFirestore, collection, addDoc, getDocs, doc, setDoc, getDoc, query, orderBy, limit, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+// ── FIREBASE CONFIG ──────────────────────────────────────────────────────────
+// Replace these values with your own from console.firebase.google.com
+// (Create project → Add web app → copy firebaseConfig object)
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT.appspot.com",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId: "YOUR_APP_ID"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const googleProvider = new GoogleAuthProvider();
+
+// ── EXPOSE TO GLOBAL SCOPE ────────────────────────────────────────────────────
+window._auth = auth;
+window._db = db;
+
+window.doAuth = async function() {
+  const email = document.getElementById('auth-email').value.trim();
+  const pass  = document.getElementById('auth-pass').value;
+  const isSignup = document.getElementById('auth-title').textContent.includes('Create');
+  const errEl = document.getElementById('auth-error');
+  errEl.classList.add('hidden');
+  try {
+    if (isSignup) {
+      const dname = document.getElementById('auth-displayname').value.trim() || 'maker';
+      const cred = await createUserWithEmailAndPassword(auth, email, pass);
+      await updateProfile(cred.user, { displayName: dname });
+      await setDoc(doc(db,'users',cred.user.uid),{ displayName: dname, email, createdAt: serverTimestamp(), projects:[], models:[] });
+    } else {
+      await signInWithEmailAndPassword(auth, email, pass);
+    }
+    hideAuth();
+    showToast('Welcome to the workshop!');
+  } catch(e) {
+    errEl.textContent = e.message.replace('Firebase: ','');
+    errEl.classList.remove('hidden');
+  }
+};
+
+window.doGoogleAuth = async function() {
+  try {
+    const result = await signInWithPopup(auth, googleProvider);
+    const user = result.user;
+    const snap = await getDoc(doc(db,'users',user.uid));
+    if(!snap.exists()) {
+      await setDoc(doc(db,'users',user.uid),{ displayName: user.displayName, email: user.email, createdAt: serverTimestamp(), projects:[], models:[] });
+    }
+    hideAuth();
+    showToast('Welcome, ' + user.displayName + '!');
+  } catch(e) { showToast('Google sign-in failed: ' + e.message, true); }
+};
+
+window.signOut = async function() {
+  await fbSignOut(auth);
+  showToast('Signed out.');
+};
+
+window.saveProject = async function(data) {
+  if(!auth.currentUser) { showToast('Sign in to save projects.', true); return null; }
+  const ref = await addDoc(collection(db,'projects'),{
+    ...data, uid: auth.currentUser.uid,
+    author: auth.currentUser.displayName || 'anonymous',
+    createdAt: serverTimestamp(), likes: 0, downloads: 0
+  });
+  showToast('Project saved! ID: ' + ref.id);
+  return ref.id;
+};
+
+window.loadProjects = async function(cb) {
+  const q = query(collection(db,'projects'), orderBy('createdAt','desc'), limit(20));
+  const snap = await getDocs(q);
+  const items = [];
+  snap.forEach(d => items.push({ id: d.id, ...d.data() }));
+  cb(items);
+};
+
+onAuthStateChanged(auth, user => {
+  const authBar = document.getElementById('auth-bar');
+  const userBar  = document.getElementById('user-bar');
+  const userName = document.getElementById('user-name');
+  if(user) {
+    authBar.classList.add('hidden');
+    userBar.classList.remove('hidden');
+    userName.textContent = user.displayName || user.email.split('@')[0];
+    window._currentUser = user;
+  } else {
+    authBar.classList.remove('hidden');
+    userBar.classList.add('hidden');
+    window._currentUser = null;
+  }
+});
+</script>
+
+<!-- APP SCRIPTS -->
+<script src="js/app.js"></script>
+<script src="js/cad.js"></script>
+<script src="js/blocks.js"></script>
+</body>
+</html>
